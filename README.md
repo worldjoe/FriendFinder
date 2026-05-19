@@ -4,6 +4,10 @@ FriendFinder is an iOS app that connects to Meta AI glasses through the Meta Wea
 
 After connecting your glasses, you can manage friend profiles, add training photos, and run live recognition while streaming.
 
+## Demo
+
+![FriendFinder demo](README-assets/video-211_singular_display.gif)
+
 ## What The App Does
 
 - Connects to Meta AI glasses using the DAT SDK registration and permission flow
