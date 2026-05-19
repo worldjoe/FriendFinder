@@ -4,3 +4,6 @@
 .DS_Store
 .vscode/DerivedData/
 DerivedData/
+
+# Xcode user-specific data
+FriendFinder.xcodeproj/project.xcworkspace/xcuserdata/

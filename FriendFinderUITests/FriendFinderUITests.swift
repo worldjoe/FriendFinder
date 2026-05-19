@@ -9,7 +9,7 @@
 import MWDATMockDeviceTestClient
 import XCTest
 
-final class CameraAccessUITests: XCTestCase {
+final class FriendFinderUITests: XCTestCase {
   var portFilePath: String {
     NSTemporaryDirectory() + "mwdat_test_server_port.txt"
   }

@@ -42,6 +42,12 @@ A sample iOS application demonstrating integration with Meta Wearables Device Ac
 1. If a firmware update is required, tap "Update firmware" from the connection screen.
 1. If session start reports that the app on the glasses is outdated, tap "Update app on glasses" from the connection screen.
 
+## Support
+
+If you found this project helpful, you can support me:
+
+[![Buy Me a Coffee](https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=☕&slug=worldjoe&button_colour=FFDD00&font_colour=000000&font_family=Arial&outline_colour=000000&coffee_colour=ffffff)](https://buymeacoffee.com/worldjoe)
+
 ## Troubleshooting
 
 For issues related to the Meta Wearables Device Access Toolkit, please refer to the [developer documentation](https://wearables.developer.meta.com/docs/develop/) or visit our [discussions forum](https://github.com/facebook/meta-wearables-dat-ios/discussions)

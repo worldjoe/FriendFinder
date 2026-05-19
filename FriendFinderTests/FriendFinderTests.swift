@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-@testable import CameraAccess
+@testable import FriendFinder
 import Foundation
 import MWDATCore
 import MWDATMockDevice
