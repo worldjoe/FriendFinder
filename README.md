@@ -48,4 +48,14 @@ For issues related to the Meta Wearables Device Access Toolkit, please refer to 
 
 ## License
 
-This source code is licensed under the license found in the LICENSE file in the root directory of this source tree.
+This sample is distributed under the MIT License.
+
+Face recognition in this sample uses FaceNet assets/training data lineage from:
+https://github.com/davidsandberg/facenet
+
+That upstream project is MIT-licensed, and this sample's FaceNet-related assets are used under MIT terms.
+See LICENSE.md for the full license text.
+
+## Attribution
+
+- FaceNet project: https://github.com/davidsandberg/facenet

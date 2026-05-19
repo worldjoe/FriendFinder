@@ -20,16 +20,32 @@
 import MWDATMockDevice
 import Observation
 import SwiftUI
+import Foundation
+
+enum DisplayDebugSettings {
+  static let statusDebugEnabledKey = "display.statusDebugEnabled"
+}
+
+extension Notification.Name {
+  static let displayStatusDebugSettingDidChange = Notification.Name("displayStatusDebugSettingDidChange")
+}
 
 @Observable
 @MainActor
 class DebugMenuViewModel {
   public var showDebugMenu: Bool
+  public var showDisplayStatusDebug: Bool {
+    didSet {
+      UserDefaults.standard.set(showDisplayStatusDebug, forKey: DisplayDebugSettings.statusDebugEnabledKey)
+      NotificationCenter.default.post(name: .displayStatusDebugSettingDidChange, object: showDisplayStatusDebug)
+    }
+  }
   public var mockDeviceKitViewModel: MockDeviceKitView.ViewModel
 
   init(mockDeviceKit: MockDeviceKitInterface) {
     self.mockDeviceKitViewModel = MockDeviceKitView.ViewModel(mockDeviceKit: mockDeviceKit)
     self.showDebugMenu = false
+    self.showDisplayStatusDebug = UserDefaults.standard.bool(forKey: DisplayDebugSettings.statusDebugEnabledKey)
   }
 }
 

@@ -74,7 +74,16 @@ struct CameraAccessApp: App {
         }
         #if DEBUG
       .sheet(isPresented: $debugMenuViewModel.showDebugMenu) {
-        MockDeviceKitView(viewModel: debugMenuViewModel.mockDeviceKitViewModel)
+        VStack(spacing: 0) {
+          Toggle("Show Glasses Display Debug Status", isOn: $debugMenuViewModel.showDisplayStatusDebug)
+            .padding(.horizontal)
+            .padding(.top)
+            .padding(.bottom, 8)
+
+          Divider()
+
+          MockDeviceKitView(viewModel: debugMenuViewModel.mockDeviceKitViewModel)
+        }
       }
       .overlay {
         DebugMenuView(debugMenuViewModel: debugMenuViewModel)

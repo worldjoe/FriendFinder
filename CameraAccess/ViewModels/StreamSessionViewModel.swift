@@ -12,6 +12,7 @@ import MWDATDisplay
 import SwiftUI
 import os
 import Combine
+import Foundation
 
 enum StreamingStatus {
   case streaming
@@ -20,10 +21,10 @@ enum StreamingStatus {
 }
 
 private struct GlassesDisplaySnapshot: Equatable {
-  let primaryText: String
+  let nameText: String
+  let nicknameText: String?
   let secondaryLines: [String]
   let infoText: String?
-  let backgroundImageURI: String?
   let captureButtonTitle: String
 }
 
@@ -71,8 +72,6 @@ final class StreamSessionViewModel: ObservableObject {
   private var lastSentDisplaySnapshot: GlassesDisplaySnapshot?
   private var displayRefreshTask: Task<Void, Never>?
   private var consecutiveDisplaySendFailures: Int = 0
-  private var matchedPhotoFileByFriendId: [String: String] = [:]
-  private let showDisplayStatusDebug: Bool = false
 
   // Recognition
   let recognitionCoordinator: RecognitionCoordinator
@@ -186,16 +185,7 @@ final class StreamSessionViewModel: ObservableObject {
   }
 
   func capturePhoto() {
-    guard !isCapturingPhoto, streamingStatus == .streaming else {
-      showPhotoCaptureError = true
-      return
-    }
-    isCapturingPhoto = true
-    let success = stream?.capturePhoto(format: .jpeg) ?? false
-    if !success {
-      isCapturingPhoto = false
-      showPhotoCaptureError = true
-    }
+    requestPhotoCapture()
   }
 
   func dismissError() {
@@ -436,6 +426,21 @@ final class StreamSessionViewModel: ObservableObject {
     }
   }
 
+  private func requestPhotoCapture() {
+    guard !isCapturingPhoto, streamingStatus == .streaming else {
+      showPhotoCaptureError = true
+      return
+    }
+
+    isCapturingPhoto = true
+
+    let success = stream?.capturePhoto(format: .jpeg) ?? false
+    if !success {
+      isCapturingPhoto = false
+      showPhotoCaptureError = true
+    }
+  }
+
   private func showError(_ message: String) {
     errorMessage = message
     showError = true
@@ -528,28 +533,6 @@ final class StreamSessionViewModel: ObservableObject {
         lastSentDisplaySnapshot = snapshot
         consecutiveDisplaySendFailures = 0
       } catch {
-        // If the image payload is unsupported, fall back to text-only so
-        // recognition status and names continue to render on glasses.
-        if snapshot.backgroundImageURI != nil {
-          let textOnlySnapshot = GlassesDisplaySnapshot(
-            primaryText: snapshot.primaryText,
-            secondaryLines: snapshot.secondaryLines,
-            infoText: snapshot.infoText,
-            backgroundImageURI: nil,
-            captureButtonTitle: snapshot.captureButtonTitle
-          )
-
-          do {
-            try await display.send(makeDisplayView(snapshot: textOnlySnapshot))
-            lastSentDisplaySnapshot = textOnlySnapshot
-            desiredDisplaySnapshot = nil
-            consecutiveDisplaySendFailures = 0
-            continue
-          } catch {
-            // Continue into the common retry/error path below.
-          }
-        }
-
         desiredDisplaySnapshot = snapshot
         consecutiveDisplaySendFailures += 1
 
@@ -585,47 +568,46 @@ final class StreamSessionViewModel: ObservableObject {
       recognitionCoordinator.friendsStore.friend(withId: match.friendId)
     }
 
-    let primaryText = matchedFriend?.nickname?.nonEmptyTrimmed
-      ?? matchedFriend?.name
+    let nameText = matchedFriend?.name
       ?? lastMatch?.name
       ?? "No recent match"
+    let nicknameText = matchedFriend?.nickname?.nonEmptyTrimmed
 
-    let infoText = matchedFriend?.note?.nonEmptyTrimmed
-    let backgroundImageURI = backgroundURI(for: matchedFriend)
+    let noteText = matchedFriend?.note?.nonEmptyTrimmed
+    let infoText = [noteText].compactMap { $0 }.joined(separator: " • ").nonEmptyTrimmed
 
-    var secondaryLines: [String] = []
-    if showDisplayStatusDebug {
-      secondaryLines.append(hasFoundFace ? "Found Face" : "Scanning for face")
-      secondaryLines.append(isAttemptingMatchFace ? "Attempting to match face" : "Waiting to match face")
-
-      switch streamingStatus {
-      case .streaming:
-        secondaryLines.append("Streaming live")
-      case .waiting:
-        secondaryLines.append(stream == nil ? "Ready to capture" : "Waiting for stream")
-      case .stopped:
-        secondaryLines.append("Stream stopped")
-      }
-
-      if let lastMatch {
-        secondaryLines.append(String(format: "Confidence %.3f", lastMatch.score))
-      }
+    let streamLine: String
+    switch streamingStatus {
+    case .streaming:
+      streamLine = "Stream: live"
+    case .waiting:
+      streamLine = stream == nil ? "Stream: ready" : "Stream: waiting"
+    case .stopped:
+      streamLine = "Stream: stopped"
     }
 
+    let faceLine = "Face: \(hasFoundFace ? "detected" : "scanning") • Match: \(isAttemptingMatchFace ? "running" : "idle")"
+    let confidenceLine = lastMatch.map { String(format: "Confidence: %.3f", $0.score) } ?? "Confidence: -"
+    let secondaryLines = [faceLine, "\(streamLine) • \(confidenceLine)"]
+
     return GlassesDisplaySnapshot(
-      primaryText: primaryText,
+      nameText: nameText,
+      nicknameText: nicknameText,
       secondaryLines: secondaryLines,
       infoText: infoText,
-      backgroundImageURI: backgroundImageURI,
       captureButtonTitle: stream == nil ? "Capture" : "Stop"
     )
   }
 
   private func makeDisplayView(snapshot: GlassesDisplaySnapshot) -> FlexBox {
-    FlexBox(direction: .row, spacing: 12) {
+    FlexBox(direction: .column, spacing: 12) {
       FlexBox(direction: .column, spacing: 4) {
         MWDATDisplay.Text("Recent match", style: .meta, color: .secondary)
-        MWDATDisplay.Text(snapshot.primaryText, style: .heading)
+        MWDATDisplay.Text(snapshot.nameText, style: .heading)
+
+        if let nicknameText = snapshot.nicknameText {
+          MWDATDisplay.Text("Nickname: \(nicknameText)", style: .body)
+        }
 
         if let infoText = snapshot.infoText {
           MWDATDisplay.Text("Info: \(infoText)", style: .body)
@@ -633,19 +615,16 @@ final class StreamSessionViewModel: ObservableObject {
       }
       .padding(16)
       .background(.card)
-      .flexGrow(1)
-      .flexShrink(1)
 
-      if showDisplayStatusDebug, !snapshot.secondaryLines.isEmpty {
+      if !snapshot.secondaryLines.isEmpty {
         FlexBox(direction: .column, spacing: 8) {
+          MWDATDisplay.Text("Debug", style: .meta, color: .secondary)
           for line in snapshot.secondaryLines {
             MWDATDisplay.Text(line, style: .body)
           }
         }
         .padding(16)
         .background(.card)
-        .flexGrow(1)
-        .flexShrink(1)
       }
 
       FlexBox(direction: .column, spacing: 0) {
@@ -658,43 +637,7 @@ final class StreamSessionViewModel: ObservableObject {
           await self?.toggleCaptureFromDisplay()
         }
       }
-
-      FlexBox(direction: .column, spacing: 12) {
-        if let backgroundImageURI = snapshot.backgroundImageURI {
-          MWDATDisplay.Image(
-            uri: backgroundImageURI,
-            sizePreset: .fill,
-            cornerRadius: .none
-          )
-        } else {
-          FlexBox(direction: .column, spacing: 0) {
-            MWDATDisplay.Text("No matched photo", style: .meta, color: .secondary)
-          }
-          .padding(16)
-          .background(.card)
-        }
-      }
-      .flexGrow(1)
-      .flexShrink(1)
     }
-  }
-
-  private func backgroundURI(for friend: Friend?) -> String? {
-    guard let friend, !friend.imageFileNames.isEmpty else { return nil }
-
-    let selectedFileName: String
-    if let cached = matchedPhotoFileByFriendId[friend.id], friend.imageFileNames.contains(cached) {
-      selectedFileName = cached
-    } else {
-      selectedFileName = friend.imageFileNames.randomElement() ?? friend.imageFileNames[0]
-      matchedPhotoFileByFriendId[friend.id] = selectedFileName
-    }
-
-    // Local file URLs inside the iOS sandbox are not directly reachable by the
-    // glasses renderer. Send a compact data URI payload instead.
-    // MWDAT display image loading is URL based; keep local assets out of the
-    // payload so text content can continue rendering reliably.
-    return nil
   }
 
 }
