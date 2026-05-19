@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run CameraAccess on Connected iPhone",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "echo Starting CameraAccess on connected iPhone...",
+            "preLaunchTask": "iOS: Run CameraAccess on Connected iPhone"
+        },
+        {
+            "name": "Open Project in Xcode (for native iOS debugging)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "open CameraAccess.xcodeproj"
+        }
+    ]
+}

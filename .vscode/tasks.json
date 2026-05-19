@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "iOS: Run CameraAccess on Connected iPhone",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "command": "set -euo pipefail\n\nDEVICE_ID=\"$(xcrun xctrace list devices | sed -n '/== Devices ==/,/== Simulators ==/p' | sed -nE '/iPhone/s/.*\\(([0-9A-F-]+)\\)$/\\1/p' | head -n 1)\"\n\nif [[ -z \"${DEVICE_ID}\" ]]; then\n  echo \"No connected physical iPhone found. Connect and unlock your iPhone, then trust this Mac.\"\n  exit 1\nfi\n\necho \"Using device: ${DEVICE_ID}\"\n\nxcodebuild \\\n  -project CameraAccess.xcodeproj \\\n  -scheme CameraAccess \\\n  -configuration Debug \\\n  -destination \"id=${DEVICE_ID}\" \\\n  -derivedDataPath .vscode/DerivedData \\\n  -allowProvisioningUpdates \\\n  build\n\nAPP_PATH=\"${PWD}/.vscode/DerivedData/Build/Products/Debug-iphoneos/CameraAccess.app\"\n\nif [[ ! -d \"${APP_PATH}\" ]]; then\n  echo \"Build succeeded but app bundle not found at: ${APP_PATH}\"\n  exit 1\nfi\n\nBUNDLE_ID=\"$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' \"${APP_PATH}/Info.plist\")\"\n\necho \"Installing app on device...\"\nxcrun devicectl device install app --device \"${DEVICE_ID}\" \"${APP_PATH}\"\n\necho \"Launching ${BUNDLE_ID}...\"\nxcrun devicectl device process launch --device \"${DEVICE_ID}\" --terminate-existing \"${BUNDLE_ID}\"",
+      "problemMatcher": []
+    }
+  ]
+}

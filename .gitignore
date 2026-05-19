@@ -1,0 +1,6 @@
+*.xcframework/
+
+# Local/editor/build artifacts
+.DS_Store
+.vscode/DerivedData/
+DerivedData/
