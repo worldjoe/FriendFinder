@@ -1,15 +1,18 @@
-# Camera Access App
+# FriendFinder
 
-A sample iOS application demonstrating integration with Meta Wearables Device Access Toolkit. This app showcases streaming video from Meta AI glasses, capturing photos, and managing connection states.
+FriendFinder is an iOS app that connects to Meta AI glasses through the Meta Wearables Device Access Toolkit and performs on-device face matching against a friend library you build in the app.
 
-## Features
+After connecting your glasses, you can manage friend profiles, add training photos, and run live recognition while streaming.
 
-- Connect to Meta AI glasses
-- Stream camera feed from the device
-- Capture photos from glasses
-- Share captured photos
-- Open firmware and glasses app update flows when required
-- Face recognition powered by FaceNet (Inception-ResNet-v1, VGGFace2)
+## What The App Does
+
+- Connects to Meta AI glasses using the DAT SDK registration and permission flow
+- Starts a camera stream session from connected glasses
+- Lets you create and manage a friend list (name, nickname, and notes)
+- Lets you attach one or more training photos per friend
+- Builds friend embeddings and matches live faces against your saved friends
+- Shows recognition status and latest match information during streaming
+- Supports firmware and glasses DAT app update handoff when required
 
 ## Prerequisites
 
@@ -33,12 +36,12 @@ A sample iOS application demonstrating integration with Meta Wearables Device Ac
 
 1. Turn 'Developer Mode' on in the Meta AI app.
 1. Launch the app.
-1. Press the "Connect" button to complete app registration.
-1. Once connected, the camera stream from the device will be displayed
-1. Use the on-screen controls to:
-   - Capture photos
-   - View and save captured photos
-   - Disconnect from the device
+1. Tap "Connect my glasses" and complete registration.
+1. After registration, start a stream session from the home screen.
+1. Open the Friends screen to add people you want to recognize.
+1. For each friend, add clear training photos and save.
+1. Return to streaming and start recognition to see live matches.
+1. Use the in-app controls to manage connection state and recognition.
 1. If a firmware update is required, tap "Update firmware" from the connection screen.
 1. If session start reports that the app on the glasses is outdated, tap "Update app on glasses" from the connection screen.
 
