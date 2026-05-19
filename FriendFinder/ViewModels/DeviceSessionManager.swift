@@ -26,6 +26,7 @@ final class DeviceSessionManager {
   private let wearables: WearablesInterface
   private let deviceSelector: AutoDeviceSelector
   private var deviceSession: DeviceSession?
+  private var activeDeviceStateContinuations: [UUID: AsyncStream<Bool>.Continuation] = [:]
   @ObservationIgnored private var deviceMonitorTask: Task<Void, Never>?
   @ObservationIgnored private var stateObserverTask: Task<Void, Never>?
 
@@ -59,6 +60,22 @@ final class DeviceSessionManager {
     }
     deviceSession = nil
     isReady = false
+  }
+
+  /// Emits active-device availability whenever it changes.
+  /// Sends the current value immediately when subscribed.
+  func activeDeviceStateStream() -> AsyncStream<Bool> {
+    AsyncStream { continuation in
+      let id = UUID()
+      continuation.onTermination = { [weak self] _ in
+        Task { @MainActor [weak self] in
+          self?.activeDeviceStateContinuations.removeValue(forKey: id)
+        }
+      }
+
+      activeDeviceStateContinuations[id] = continuation
+      continuation.yield(hasActiveDevice)
+    }
   }
 
   /// Returns a ready DeviceSession, creating one if needed.
@@ -176,7 +193,11 @@ final class DeviceSessionManager {
     deviceMonitorTask = Task { [weak self] in
       guard let self else { return }
       for await device in deviceSelector.activeDeviceStream() {
-        hasActiveDevice = device != nil
+        let isActive = device != nil
+        if hasActiveDevice != isActive {
+          hasActiveDevice = isActive
+          activeDeviceStateContinuations.values.forEach { $0.yield(isActive) }
+        }
       }
     }
   }

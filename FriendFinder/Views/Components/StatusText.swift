@@ -9,7 +9,7 @@
 //
 // StatusText.swift
 //
-// Reusable UI component for displaying conditional status text throughout the CameraAccess app.
+// Reusable UI component for displaying conditional status text throughout the FriendFinder app.
 //
 
 import SwiftUI

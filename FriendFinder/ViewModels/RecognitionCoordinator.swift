@@ -1,18 +1,6 @@
 import Foundation
 import UIKit
 import Combine
-import Vision
-
-private enum TrainingImagePreparationError: LocalizedError {
-    case noUsableFacePhotos
-
-    var errorDescription: String? {
-        switch self {
-        case .noUsableFacePhotos:
-            return "No usable training photos found. Each photo must contain exactly one clear face."
-        }
-    }
-}
 
 @MainActor
 class RecognitionCoordinator: ObservableObject {
@@ -72,8 +60,7 @@ class RecognitionCoordinator: ObservableObject {
     func createFriend(name: String, nickname: String? = nil, note: String? = nil, images: [UIImage]) async throws -> Friend {
         let friend = friendsStore.addFriend(name: name, nickname: nickname, note: note)
         if !images.isEmpty {
-            let prepared = try prepareTrainingImages(images)
-            _ = try friendsStore.addImages(prepared, for: friend.id)
+            _ = try friendsStore.addImages(images.map { $0.trainingSized() }, for: friend.id)
             _ = await computeCentroid(for: friend.id)
         }
         return friend
@@ -95,8 +82,7 @@ class RecognitionCoordinator: ObservableObject {
 
     func addTrainingImages(_ images: [UIImage], for friendId: String) async throws {
         guard !images.isEmpty else { return }
-        let prepared = try prepareTrainingImages(images)
-        _ = try friendsStore.addImages(prepared, for: friendId)
+        _ = try friendsStore.addImages(images.map { $0.trainingSized() }, for: friendId)
         _ = await computeCentroid(for: friendId)
     }
 
@@ -108,7 +94,8 @@ class RecognitionCoordinator: ObservableObject {
 
         for filename in friend.imageFileNames {
             if let img = friendsStore.loadImage(named: filename) {
-                if let vec = await enrollmentProcessor.embedding(from: img), !vec.isEmpty {
+                let trainingImage = img.trainingSized()
+                if let vec = await enrollmentProcessor.embedding(from: trainingImage), !vec.isEmpty {
                     embeddings.append(vec)
                 }
             }
@@ -209,47 +196,6 @@ class RecognitionCoordinator: ObservableObject {
         lastMatch = m
         logs.insert("Matched \(m.name) with score \(String(format: "%.3f", m.score))", at: 0)
 
-        // In DisplayAccess we sent the name to the device display. CameraAccess may want to surface this locally.
-    }
-
-    private func prepareTrainingImages(_ images: [UIImage]) throws -> [UIImage] {
-        let prepared = images.compactMap(extractSingleFaceCrop)
-        if prepared.isEmpty {
-            throw TrainingImagePreparationError.noUsableFacePhotos
-        }
-        return prepared
-    }
-
-    private func extractSingleFaceCrop(from image: UIImage) -> UIImage? {
-        guard let cgImage = image.cgImage else { return nil }
-
-        let request = VNDetectFaceRectanglesRequest()
-        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: .up, options: [:])
-
-        do {
-            try handler.perform([request])
-        } catch {
-            NSLog("[RecognitionCoordinator] Face detection failed during enrollment: \(error)")
-            return nil
-        }
-
-        guard let faces = request.results as? [VNFaceObservation], faces.count == 1,
-              let face = faces.first else {
-            return nil
-        }
-
-        let width = CGFloat(cgImage.width)
-        let height = CGFloat(cgImage.height)
-        var rect = CGRect(
-            x: face.boundingBox.origin.x * width,
-            y: (1 - face.boundingBox.origin.y - face.boundingBox.size.height) * height,
-            width: face.boundingBox.size.width * width,
-            height: face.boundingBox.size.height * height
-        )
-
-        rect = rect.insetBy(dx: -12, dy: -12)
-        rect = rect.intersection(CGRect(x: 0, y: 0, width: width, height: height))
-        guard let cropped = cgImage.cropping(to: rect) else { return nil }
-        return UIImage(cgImage: cropped)
+        // In DisplayAccess we sent the name to the device display. FriendFinder may want to surface this locally.
     }
 }

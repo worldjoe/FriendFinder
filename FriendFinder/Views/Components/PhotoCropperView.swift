@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import ImageIO
 
 struct QueuedCropImage: Identifiable {
   let id = UUID()
@@ -173,7 +174,43 @@ struct PhotoCropperView: View {
   }
 }
 
-private extension UIImage {
+extension UIImage {
+  static func downsampledTrainingImage(from data: Data, maxPixelSize: CGFloat = 1600) -> UIImage? {
+    let options = [kCGImageSourceShouldCache: false] as CFDictionary
+    guard let source = CGImageSourceCreateWithData(data as CFData, options) else {
+      return UIImage(data: data)?.trainingSized(maxDimension: maxPixelSize)
+    }
+
+    let downsampleOptions = [
+      kCGImageSourceCreateThumbnailFromImageAlways: true,
+      kCGImageSourceCreateThumbnailWithTransform: true,
+      kCGImageSourceShouldCacheImmediately: false,
+      kCGImageSourceShouldCache: false,
+      kCGImageSourceThumbnailMaxPixelSize: Int(maxPixelSize)
+    ] as CFDictionary
+
+    guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, downsampleOptions) else {
+      return UIImage(data: data)?.trainingSized(maxDimension: maxPixelSize)
+    }
+
+    return UIImage(cgImage: cgImage).trainingSized(maxDimension: maxPixelSize)
+  }
+
+  func trainingSized(maxDimension: CGFloat = 1024) -> UIImage {
+    let longestSide = max(size.width, size.height)
+    guard longestSide > maxDimension, longestSide > 0 else { return self }
+
+    let scale = maxDimension / longestSide
+    let targetSize = CGSize(width: size.width * scale, height: size.height * scale)
+    let format = UIGraphicsImageRendererFormat.default()
+    format.scale = 1
+
+    let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
+    return renderer.image { _ in
+      draw(in: CGRect(origin: .zero, size: targetSize))
+    }
+  }
+
   func normalizedForCropping() -> UIImage {
     guard imageOrientation != .up else { return self }
 

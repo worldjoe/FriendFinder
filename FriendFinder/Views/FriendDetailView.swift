@@ -159,14 +159,16 @@ struct FriendDetailView: View {
 
     isAddingPhotos = true
     centroidText = ""
+    if pendingCropImages.isEmpty && activeCropImage == nil {
+      croppedImagesToSave = []
+    }
 
-    var images: [UIImage] = []
     for item in items {
       do {
         if let data = try await item.loadTransferable(type: Data.self),
-          let image = UIImage(data: data)
+          let image = UIImage.downsampledTrainingImage(from: data)
         {
-          images.append(image)
+          enqueueImagesForCropping([image])
         }
       } catch {
         centroidText = "Failed to load one or more selected photos"
@@ -175,11 +177,6 @@ struct FriendDetailView: View {
 
     selectedPhotoItems = []
     isAddingPhotos = false
-
-    guard !images.isEmpty else { return }
-
-    croppedImagesToSave = []
-    enqueueImagesForCropping(images)
   }
 
   private func enqueueImagesForCropping(_ images: [UIImage]) {
@@ -208,7 +205,7 @@ struct FriendDetailView: View {
   }
 
   private func acceptCroppedTrainingImage(_ image: UIImage) {
-    croppedImagesToSave.append(image)
+    croppedImagesToSave.append(image.trainingSized())
     activeCropImage = nil
     presentNextCropImageIfNeeded()
   }

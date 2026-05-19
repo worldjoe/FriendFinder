@@ -18,12 +18,26 @@ import SwiftUI
 
 struct HomeScreenView: View {
   var viewModel: WearablesViewModel
+  @State private var showingFriends: Bool = false
+  @StateObject private var recognitionCoordinator = RecognitionCoordinator()
 
   var body: some View {
     ZStack {
       Color.white.edgesIgnoringSafeArea(.all)
 
       VStack(spacing: 12) {
+        HStack {
+          Button(action: { showingFriends = true }) {
+            Image(systemName: "person.3.fill")
+              .resizable()
+              .aspectRatio(contentMode: .fit)
+              .foregroundStyle(.black)
+              .frame(width: 24, height: 24)
+          }
+
+          Spacer()
+        }
+
         Spacer()
 
         Image(.cameraAccessIcon)
@@ -69,6 +83,12 @@ struct HomeScreenView: View {
         }
       }
       .padding(.all, 24)
+    }
+    .sheet(isPresented: $showingFriends) {
+      FriendsView(
+        store: recognitionCoordinator.friendsStore,
+        coordinator: recognitionCoordinator
+      )
     }
   }
 

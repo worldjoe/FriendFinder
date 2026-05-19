@@ -140,13 +140,12 @@ struct AddFriendView: View {
     isLoadingPhotos = true
     loadErrorMessage = nil
 
-    var loadedImages: [UIImage] = []
     for item in items {
       do {
         if let data = try await item.loadTransferable(type: Data.self),
-          let image = UIImage(data: data)
+          let image = UIImage.downsampledTrainingImage(from: data)
         {
-          loadedImages.append(image)
+          enqueueImagesForCropping([image])
         }
       } catch {
         loadErrorMessage = "Failed to load one or more selected photos."
@@ -155,7 +154,6 @@ struct AddFriendView: View {
 
     selectedPhotoItems = []
     isLoadingPhotos = false
-    enqueueImagesForCropping(loadedImages)
   }
 
   private func enqueueImagesForCropping(_ images: [UIImage]) {
@@ -175,7 +173,7 @@ struct AddFriendView: View {
   }
 
   private func acceptCroppedImage(_ image: UIImage) {
-    pickedImages.append(image)
+    pickedImages.append(image.trainingSized())
     activeCropImage = nil
     presentNextCropImageIfNeeded()
   }

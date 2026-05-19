@@ -39,13 +39,13 @@ final class StreamSessionViewModel: ObservableObject {
   @Published var showError: Bool = false
   @Published var errorMessage: String = ""
   @Published var requiresDATAppUpdate: Bool = false
+  @Published private(set) var hasActiveDevice: Bool = false
 
   @Published var capturedPhoto: UIImage?
   @Published var showPhotoPreview: Bool = false
   @Published var showPhotoCaptureError: Bool = false
   @Published var isCapturingPhoto: Bool = false
 
-  var hasActiveDevice: Bool { sessionManager.hasActiveDevice }
   var isDeviceSessionReady: Bool { sessionManager.isReady }
 
   var isStreaming: Bool { streamingStatus != .stopped }
@@ -56,9 +56,10 @@ final class StreamSessionViewModel: ObservableObject {
   private let wearables: WearablesInterface
   private var deviceSession: DeviceSession?
   private var stream: MWDATCamera.Stream?
-  private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.example.CameraAccess", category: "StreamSessionViewModel")
+  private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.example.FriendFinder", category: "StreamSessionViewModel")
   private var receivedFrameCount: Int = 0
   private var isStartingSession: Bool = false
+  private var activeDeviceTask: Task<Void, Never>?
 
   private var stateListenerToken: AnyListenerToken?
   private var videoFrameListenerToken: AnyListenerToken?
@@ -90,6 +91,14 @@ final class StreamSessionViewModel: ObservableObject {
     self.wearables = wearables
     self.sessionManager = DeviceSessionManager(wearables: wearables)
     self.recognitionCoordinator = RecognitionCoordinator()
+    self.hasActiveDevice = sessionManager.hasActiveDevice
+
+    activeDeviceTask = Task { @MainActor [weak self] in
+      guard let self else { return }
+      for await isActive in self.sessionManager.activeDeviceStateStream() {
+        self.hasActiveDevice = isActive
+      }
+    }
 
     // Observe recognition coordinator
     recognitionMatchCancellable = recognitionCoordinator.$lastMatch.sink { [weak self] m in
@@ -116,6 +125,7 @@ final class StreamSessionViewModel: ObservableObject {
   }
 
   deinit {
+    activeDeviceTask?.cancel()
     recognitionMatchCancellable?.cancel()
     recognitionLogsCancellable?.cancel()
     recognitionFaceStateCancellable?.cancel()
