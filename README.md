@@ -46,7 +46,7 @@ A sample iOS application demonstrating integration with Meta Wearables Device Ac
 
 If you found this project helpful, you can support me:
 
-[![Buy Me a Coffee](https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=☕&slug=worldjoe&button_colour=FFDD00&font_colour=000000&font_family=Arial&outline_colour=000000&coffee_colour=ffffff)](https://buymeacoffee.com/worldjoe)
+[![Buy Me a Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://buymeacoffee.com/worldjoe)
 
 ## Troubleshooting
 
