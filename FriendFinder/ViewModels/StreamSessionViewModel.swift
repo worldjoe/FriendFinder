@@ -411,15 +411,6 @@ final class StreamSessionViewModel: ObservableObject {
     queueDisplayRefresh()
   }
 
-  private func handleVideoFrame(_ frame: VideoFrame) {
-    if let image = frame.makeUIImage() {
-      currentVideoFrame = image
-      if !hasReceivedFirstFrame {
-        hasReceivedFirstFrame = true
-      }
-    }
-  }
-
   private func handleError(_ error: StreamError) {
     let message = error.localizedDescription
     logger.error("Stream error: \(message, privacy: .public)")

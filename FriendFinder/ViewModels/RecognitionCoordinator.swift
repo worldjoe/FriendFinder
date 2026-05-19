@@ -14,7 +14,6 @@ class RecognitionCoordinator: ObservableObject {
     private let recognitionEngine: RecognitionEngine
     let friendsStore: FriendsStore
 
-    private var previewCancellable: AnyCancellable?
     private var lastShown: [String: Date] = [:]
     private let debounceInterval: TimeInterval = 8.0
     private let minScoreMarginVsSecondBest: Float = 0.03
