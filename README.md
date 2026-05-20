@@ -5,7 +5,7 @@ FriendFinder is an iOS app that connects to Meta AI glasses through the Meta Wea
 After connecting your glasses, you can manage friend profiles, add training photos, and run live recognition while streaming.
 
 ## Demo
-
+Rather than dox my family or friends I loaded up someone everyone will know. The Display Glasses don't allow recording while streaming video the phone at the same time so this demo shows a match already having occurred.
 ![FriendFinder demo](README-assets/video-211_singular_display.gif)
 
 ## What The App Does
@@ -16,6 +16,8 @@ After connecting your glasses, you can manage friend profiles, add training phot
 - Lets you attach one or more training photos per friend
 - Builds friend embeddings and matches live faces against your saved friends
 - Shows recognition status and latest match information during streaming
+- Syncs friends data with iCloud Drive (including deletion-safe tombstones)
+- Supports manual JSON/package import and JSON export from the Friends screen
 - Supports firmware and glasses DAT app update handoff when required
 
 ## Prerequisites
@@ -48,6 +50,52 @@ After connecting your glasses, you can manage friend profiles, add training phot
 1. Use the in-app controls to manage connection state and recognition.
 1. If a firmware update is required, tap "Update firmware" from the connection screen.
 1. If session start reports that the app on the glasses is outdated, tap "Update app on glasses" from the connection screen.
+
+## Helper Scripts
+
+- tools/facebook_friend_exporter/facebook_friend_exporter.py: Opens Facebook in Playwright, scrapes friend profile photos, and generates a FriendFinder-importable friends-package.zip.
+
+## Friends Import, Export, and iCloud Sync
+
+FriendFinder now supports two transfer paths:
+
+- Automatic iCloud Drive sync (recommended)
+- Manual file import/export from the Friends screen
+
+### Automatic iCloud sync (Mac + iPhone)
+
+1. Sign in with the same Apple ID on your iPhone and Mac.
+1. Enable iCloud Drive on both devices.
+1. Open FriendFinder on iPhone and go to Friends.
+1. The app syncs to an iCloud folder automatically and also supports "Sync with iCloud Now".
+1. On Mac, open Finder > iCloud Drive and locate the FriendFinder app container data.
+1. Changes written by the app (friends package + images) will propagate to the phone app.
+
+Important:
+
+- iCloud capabilities require a paid Apple Developer Program team profile for device signing.
+- If you are using a Personal Team profile, the app will still run but iCloud sync will stay unavailable and local/manual transfer flows still work.
+
+Conflict policy:
+
+- Merge key: friend id
+- Winner: newest `updatedAt` timestamp
+- Deletions are persisted as tombstones so older remote payloads do not resurrect deleted friends
+
+### Manual import/export from Friends screen
+
+Open Friends and use the sync icon in the top-right toolbar:
+
+- Import JSON or Package: imports `friends-package.zip`, `friends.json`, or a package folder containing `friends-package.json` and `images/`
+- Export ZIP (JSON + images): exports a single zip archive for transfer
+- Export JSON only: exports just the current friend list JSON
+- Sync with iCloud Now: triggers an immediate iCloud sync
+
+Notes:
+
+- JSON-only import/export moves metadata and embeddings. Image files are transferred when using ZIP/package import/export or iCloud package sync.
+- Import results report counts for imported/merged friends and missing images.
+- The Friends screen shows sync status: iCloud availability, last sync time, and latest sync error.
 
 ## Support
 

@@ -10,6 +10,7 @@
 		3A45A6B02FBB970400EF66ED /* FaceNet.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 3A45A6AF2FBB970400EF66ED /* FaceNet.mlpackage */; };
 		3A45A6B12FBB99B100EF66ED /* FaceNet.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = 3A45A6AF2FBB970400EF66ED /* FaceNet.mlpackage */; };
 		3A9D31AC2FBC3768006C39BA /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = 8FD96B942E6F0F7D00F56AB4 /* MWDATDisplay */; };
+		7B1D4D8C3C9F4B6200A1B2C3 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 7B1D4D8B3C9F4B6200A1B2C3 /* ZIPFoundation */; };
 		8F2D23802E856711002D0588 /* DebugMenuViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2D237F2E856711002D0588 /* DebugMenuViewModel.swift */; };
 		8F8F00782E8ACB4600A4BDAF /* WearablesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F8F00772E8ACB4500A4BDAF /* WearablesViewModel.swift */; };
 		8FD96B7F2E6F0A9800F56AB1 /* FriendFinderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD96B792E6F0A9800F56AB1 /* FriendFinderApp.swift */; };
@@ -131,6 +132,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7B1D4D8C3C9F4B6200A1B2C3 /* ZIPFoundation in Frameworks */,
 				3A9D31AC2FBC3768006C39BA /* MWDATDisplay in Frameworks */,
 				8FD96B952E6F0F7D00F56AB1 /* MWDATCore in Frameworks */,
 				8FD96B952E6F0F7D00F56AB2 /* MWDATCamera in Frameworks */,
@@ -290,6 +292,7 @@
 				8FD96B942E6F0F7D00F56AB2 /* MWDATCamera */,
 				8FD96B942E6F0F7D00F56AB3 /* MWDATMockDevice */,
 				8FD96B942E6F0F7D00F56AB4 /* MWDATDisplay */,
+				7B1D4D8B3C9F4B6200A1B2C3 /* ZIPFoundation */,
 			);
 			productName = FriendFinder;
 			productReference = 3A3A3A3A3A3A3A3A3A3A3A3A /* FriendFinder.app */;
@@ -374,6 +377,7 @@
 			mainGroup = 5A5A5A5A5A5A5A5A5A5A5A5A;
 			packageReferences = (
 				95F7F3332DEF0D91006D1C1A /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */,
+				7B1D4D8A3C9F4B6200A1B2C3 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 			productRefGroup = 7A7A7A7A7A7A7A7A7A7A7A7A /* Products */;
 			projectDirPath = "";
@@ -806,6 +810,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		7B1D4D8A3C9F4B6200A1B2C3 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
+			};
+		};
 		95F7F3332DEF0D91006D1C1A /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/facebook/meta-wearables-dat-ios";
@@ -836,6 +848,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 95F7F3332DEF0D91006D1C1A /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
 			productName = MWDATDisplay;
+		};
+		7B1D4D8B3C9F4B6200A1B2C3 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7B1D4D8A3C9F4B6200A1B2C3 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
 		};
 		E66CC01E2F3E1A9300B07380 /* MWDATMockDeviceTestClient */ = {
 			isa = XCSwiftPackageProductDependency;

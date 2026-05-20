@@ -2,6 +2,12 @@ import PhotosUI
 import SwiftUI
 import UIKit
 
+private struct EditableFriendImage: Identifiable {
+  let id = UUID()
+  let filename: String
+  let image: UIImage
+}
+
 struct FriendDetailView: View {
   let friendId: String
   var coordinator: RecognitionCoordinator
@@ -13,6 +19,8 @@ struct FriendDetailView: View {
   @State private var pendingCropImages: [UIImage] = []
   @State private var croppedImagesToSave: [UIImage] = []
   @State private var activeCropImage: QueuedCropImage?
+  @State private var activeRecropImage: EditableFriendImage?
+  @State private var pendingDeleteFilename: String?
   @State private var editableName: String = ""
   @State private var editableNickname: String = ""
   @State private var editableNote: String = ""
@@ -73,10 +81,24 @@ struct FriendDetailView: View {
           LazyVStack(spacing: 12) {
             ForEach(friend.imageFileNames, id: \.self) { filename in
               if let img = store.loadImage(named: filename) {
-                Image(uiImage: img)
-                  .resizable()
-                  .scaledToFit()
-                  .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                VStack(alignment: .leading, spacing: 8) {
+                  Image(uiImage: img)
+                    .resizable()
+                    .scaledToFit()
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                  HStack(spacing: 12) {
+                    Button("Re-crop this photo") {
+                      activeRecropImage = EditableFriendImage(filename: filename, image: img)
+                    }
+                    .font(.subheadline)
+
+                    Button("Delete this photo", role: .destructive) {
+                      pendingDeleteFilename = filename
+                    }
+                    .font(.subheadline)
+                  }
+                }
               }
             }
           }
@@ -143,6 +165,44 @@ struct FriendDetailView: View {
       } onConfirm: { croppedImage in
         acceptCroppedTrainingImage(croppedImage)
       }
+    }
+    .fullScreenCover(item: $activeRecropImage) { recropImage in
+      PhotoCropperView(
+        sourceImage: recropImage.image,
+        title: "Re-crop training photo",
+        skipButtonTitle: "Cancel"
+      ) {
+        activeRecropImage = nil
+      } onConfirm: { croppedImage in
+        Task {
+          await replaceExistingTrainingImage(croppedImage, filename: recropImage.filename)
+        }
+      }
+    }
+    .confirmationDialog(
+      "Delete this training photo?",
+      isPresented: Binding(
+        get: { pendingDeleteFilename != nil },
+        set: { isPresented in
+          if !isPresented {
+            pendingDeleteFilename = nil
+          }
+        }
+      ),
+      titleVisibility: .visible
+    ) {
+      Button("Delete", role: .destructive) {
+        guard let filename = pendingDeleteFilename else { return }
+        pendingDeleteFilename = nil
+        Task {
+          await deleteExistingTrainingImage(filename: filename)
+        }
+      }
+      Button("Cancel", role: .cancel) {
+        pendingDeleteFilename = nil
+      }
+    } message: {
+      Text("This removes the photo from this friend and refreshes recognition data.")
     }
   }
 
@@ -224,6 +284,39 @@ struct FriendDetailView: View {
       centroidText = "Added \(croppedImagesToSave.count) new photo\(croppedImagesToSave.count == 1 ? "" : "s") and refreshed centroid"
     } catch {
       centroidText = error.localizedDescription
+    }
+  }
+
+  private func replaceExistingTrainingImage(_ image: UIImage, filename: String) async {
+    guard let friend else { return }
+
+    isAddingPhotos = true
+    defer {
+      isAddingPhotos = false
+      activeRecropImage = nil
+    }
+
+    do {
+      try await coordinator.replaceTrainingImage(image, filename: filename, for: friend.id)
+      centroidText = "Re-cropped photo and refreshed centroid"
+    } catch {
+      centroidText = error.localizedDescription
+    }
+  }
+
+  private func deleteExistingTrainingImage(filename: String) async {
+    guard let friend else { return }
+
+    isAddingPhotos = true
+    defer {
+      isAddingPhotos = false
+    }
+
+    await coordinator.deleteTrainingImage(filename: filename, for: friend.id)
+    if let remaining = store.friend(withId: friend.id)?.imageFileNames.count, remaining > 0 {
+      centroidText = "Deleted photo and refreshed centroid"
+    } else {
+      centroidText = "Deleted photo; no training photos remain"
     }
   }
 

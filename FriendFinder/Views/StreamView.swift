@@ -39,9 +39,23 @@ struct StreamView: View {
         }
         .edgesIgnoringSafeArea(.all)
       } else {
-        ProgressView()
-          .scaleEffect(1.5)
-          .foregroundStyle(.white)
+        VStack(spacing: 14) {
+          ProgressView()
+            .scaleEffect(1.5)
+            .foregroundStyle(.white)
+
+          if viewModel.streamingStatus == .waiting {
+            Text("Ready to stream. Press Capture on your glasses to start video.")
+              .font(.system(size: 15, weight: .medium))
+              .multilineTextAlignment(.center)
+              .foregroundStyle(.white)
+              .padding(.horizontal, 16)
+              .padding(.vertical, 10)
+              .background(Color.black.opacity(0.55))
+              .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+              .padding(.horizontal, 24)
+          }
+        }
       }
 
       // Recognition overlay (top-right)

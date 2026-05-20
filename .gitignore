@@ -7,3 +7,11 @@ DerivedData/
 
 # Xcode user-specific data
 FriendFinder.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Helper script browser profile
+tools/facebook_friend_exporter/.fb-browser-profile/
+tools/facebook_friend_exporter/.venv/
+tools/facebook_friend_exporter/__pycache__/
+phone_dump
+friends.json
+

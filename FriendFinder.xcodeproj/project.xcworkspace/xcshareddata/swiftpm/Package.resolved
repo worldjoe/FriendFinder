@@ -1,5 +1,5 @@
 {
-  "originHash" : "9dd38f857db7479f1816015771b37a83ed7849590400ca2677a9c5f1b5014407",
+  "originHash" : "13ff691b414ce759d06723cd25a8704e751e800081a84dd826ec0493e4dbb06f",
   "pins" : [
     {
       "identity" : "meta-wearables-dat-ios",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "c40db3978a76b97504b85ed9f082be5549c5a486",
         "version" : "0.7.0"
+      }
+    },
+    {
+      "identity" : "zipfoundation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/weichsel/ZIPFoundation.git",
+      "state" : {
+        "revision" : "22787ffb59de99e5dc1fbfe80b19c97a904ad48d",
+        "version" : "0.9.20"
       }
     }
   ],

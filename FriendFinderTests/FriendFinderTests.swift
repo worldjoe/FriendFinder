@@ -363,12 +363,102 @@ final class FriendsStoreTests: XCTestCase {
     XCTAssertTrue((try store.addImages(images, for: "missing")).isEmpty)
   }
 
+  func testRemoveImageDeletesFileAndReference() throws {
+    let store = FriendsStore(filename: filename)
+    let friend = store.addFriend(name: "Alice")
+    let image = Self.makeTestImage(size: CGSize(width: 40, height: 40))
+    let filename = try store.addImage(image, for: friend.id)
+
+    let fileURL = store.imageFileURL(named: filename)
+    XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path))
+
+    store.removeImage(named: filename, for: friend.id)
+
+    XCTAssertFalse(FileManager.default.fileExists(atPath: fileURL.path))
+    XCTAssertFalse(store.friend(withId: friend.id)?.imageFileNames.contains(filename) ?? true)
+  }
+
+  func testClearCentroidRemovesPersistedEmbedding() {
+    let store = FriendsStore(filename: filename)
+    let friend = store.addFriend(name: "Alice")
+
+    store.setCentroid([0.1, 0.2, 0.3], for: friend.id)
+    XCTAssertNotNil(store.friend(withId: friend.id)?.centroidEmbedding)
+
+    store.clearCentroid(for: friend.id)
+    XCTAssertNil(store.friend(withId: friend.id)?.centroidEmbedding)
+  }
+
   func testCorruptedJSONFallsBackToEmptyArray() throws {
     let bytes = Data("{".utf8)
     try bytes.write(to: storageURL)
 
     let store = FriendsStore(filename: filename)
     XCTAssertTrue(store.friends.isEmpty)
+  }
+
+  func testImportFriendsJSONSupportsLegacyArrayWithoutUpdatedAt() throws {
+    let store = FriendsStore(filename: filename)
+    let legacyJSON = """
+    [
+      {
+        "id": "legacy-1",
+        "name": "Legacy",
+        "nickname": "Old",
+        "note": "From desktop",
+        "imageFileNames": [],
+        "centroidEmbedding": null
+      }
+    ]
+    """
+    let importURL = temporaryFileURL(ext: "json")
+    try Data(legacyJSON.utf8).write(to: importURL)
+
+    let result = try store.importFriendsJSON(from: importURL)
+
+    XCTAssertEqual(result.importedCount, 1)
+    XCTAssertEqual(store.friends.count, 1)
+    XCTAssertEqual(store.friends.first?.id, "legacy-1")
+  }
+
+  func testImportMergePrefersNewerUpdatedAt() throws {
+    let store = FriendsStore(filename: filename)
+    let original = store.addFriend(name: "Alice", nickname: "A", note: "old")
+
+    let newer = Friend(
+      id: original.id,
+      name: "Alice Updated",
+      nickname: "A2",
+      note: "new",
+      imageFileNames: [],
+      centroidEmbedding: nil,
+      updatedAt: Date().addingTimeInterval(120)
+    )
+    let importURL = temporaryFileURL(ext: "json")
+    try Self.makeISO8601Encoder().encode([newer]).write(to: importURL)
+
+    _ = try store.importFriendsJSON(from: importURL, strategy: .mergeByIdNewestTimestampWins)
+
+    XCTAssertEqual(store.friend(withId: original.id)?.name, "Alice Updated")
+    XCTAssertEqual(store.friend(withId: original.id)?.note, "new")
+  }
+
+  func testPackageRoundTripAndTombstonePreventsResurrection() throws {
+    let sourceStore = FriendsStore(filename: "friends-tests-source-\(UUID().uuidString).json")
+    let created = sourceStore.addFriend(name: "RoundTrip")
+
+    let packageDirectory = temporaryDirectoryURL()
+    try sourceStore.exportPackage(to: packageDirectory)
+
+    let destinationStore = FriendsStore(filename: "friends-tests-dest-\(UUID().uuidString).json")
+    _ = try destinationStore.importPackage(from: packageDirectory, strategy: .mergeByIdNewestTimestampWins)
+    XCTAssertEqual(destinationStore.friend(withId: created.id)?.name, "RoundTrip")
+
+    destinationStore.deleteFriend(id: created.id)
+    XCTAssertNil(destinationStore.friend(withId: created.id))
+
+    _ = try destinationStore.importPackage(from: packageDirectory, strategy: .mergeByIdNewestTimestampWins)
+    XCTAssertNil(destinationStore.friend(withId: created.id))
   }
 
   private var storageURL: URL {
@@ -382,6 +472,24 @@ final class FriendsStoreTests: XCTestCase {
       UIColor.systemBlue.setFill()
       ctx.fill(CGRect(origin: .zero, size: size))
     }
+  }
+
+  private func temporaryFileURL(ext: String) -> URL {
+    FileManager.default.temporaryDirectory
+      .appendingPathComponent("friends-store-tests-\(UUID().uuidString).\(ext)")
+  }
+
+  private func temporaryDirectoryURL() -> URL {
+    let url = FileManager.default.temporaryDirectory
+      .appendingPathComponent("friends-package-tests-\(UUID().uuidString)", isDirectory: true)
+    try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    return url
+  }
+
+  private static func makeISO8601Encoder() -> JSONEncoder {
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    return encoder
   }
 }
 

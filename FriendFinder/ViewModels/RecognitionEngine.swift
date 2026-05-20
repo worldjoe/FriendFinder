@@ -25,6 +25,10 @@ class RecognitionEngine {
         friendsCentroids.removeValue(forKey: friendId)
     }
 
+    func resetCentroids() {
+        friendsCentroids.removeAll()
+    }
+
     func bestCandidate(embedding: [Float]) -> (friendId: String, score: Float)? {
         topCandidates(embedding: embedding, limit: 1).first
     }

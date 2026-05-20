@@ -20,13 +20,13 @@ class RecognitionCoordinator: ObservableObject {
 
     init(faceProcessor: FaceProcessor = FaceProcessor(modelName: "FaceNet", throttleFPS: 1.0),
          recognitionEngine: RecognitionEngine = RecognitionEngine(threshold: 0.65),
-         friendsStore: FriendsStore = FriendsStore()) {
+         friendsStore: FriendsStore? = nil) {
         self.faceProcessor = faceProcessor
         self.recognitionEngine = recognitionEngine
-        self.friendsStore = friendsStore
+        self.friendsStore = friendsStore ?? FriendsStore()
 
         // Load friend centroids into recognition engine
-        for friend in friendsStore.friends {
+        for friend in self.friendsStore.friends {
             if let centroid = friend.centroidEmbedding {
                 recognitionEngine.updateCentroid(for: friend.id, centroid: centroid)
             }
@@ -47,6 +47,8 @@ class RecognitionCoordinator: ObservableObject {
                 self?.handleNoFaceDetected()
             }
         }
+
+        self.friendsStore.startAutoSync()
     }
 
     // MARK: - Friends API helpers
@@ -85,6 +87,54 @@ class RecognitionCoordinator: ObservableObject {
         _ = await computeCentroid(for: friendId)
     }
 
+    func replaceTrainingImage(_ image: UIImage, filename: String, for friendId: String) async throws {
+        try friendsStore.replaceImage(named: filename, with: image.trainingSized(), for: friendId)
+        _ = await computeCentroid(for: friendId)
+    }
+
+    func deleteTrainingImage(filename: String, for friendId: String) async {
+        friendsStore.removeImage(named: filename, for: friendId)
+        _ = await computeCentroid(for: friendId)
+    }
+
+    func exportFriendsJSON(to url: URL) throws {
+        try friendsStore.exportFriendsJSON(to: url)
+    }
+
+    func exportFriendsPackage(to directoryURL: URL) throws {
+        try friendsStore.exportPackage(to: directoryURL)
+    }
+
+    func exportFriendsZIP(to zipFileURL: URL) throws {
+        try friendsStore.exportPackageZIP(to: zipFileURL)
+    }
+
+    @discardableResult
+    func importFriendsJSON(from url: URL, strategy: FriendsMergeStrategy = .mergeByIdNewestTimestampWins) async throws -> FriendsTransferResult {
+        let result = try friendsStore.importFriendsJSON(from: url, strategy: strategy)
+        await recomputeCentroids(for: result.importedFriendIDs)
+        return result
+    }
+
+    @discardableResult
+    func importFriendsPackage(from directoryURL: URL, strategy: FriendsMergeStrategy = .mergeByIdNewestTimestampWins) async throws -> FriendsTransferResult {
+        let result = try friendsStore.importPackage(from: directoryURL, strategy: strategy)
+        await recomputeCentroids(for: result.importedFriendIDs)
+        return result
+    }
+
+    @discardableResult
+    func importFriendsZIP(from zipFileURL: URL, strategy: FriendsMergeStrategy = .mergeByIdNewestTimestampWins) async throws -> FriendsTransferResult {
+        let result = try friendsStore.importPackageZIP(from: zipFileURL, strategy: strategy)
+        await recomputeCentroids(for: result.importedFriendIDs)
+        return result
+    }
+
+    func syncNow() async {
+        await friendsStore.syncNow()
+        rebuildRecognitionIndex()
+    }
+
     /// Compute centroid embeddings for a friend by running the model on stored images.
     func computeCentroid(for friendId: String) async -> [Float]? {
         guard let friend = friendsStore.friends.first(where: { $0.id == friendId }) else { return nil }
@@ -100,7 +150,11 @@ class RecognitionCoordinator: ObservableObject {
             }
         }
 
-        guard !embeddings.isEmpty else { return nil }
+        guard !embeddings.isEmpty else {
+            friendsStore.clearCentroid(for: friendId)
+            recognitionEngine.removeFriend(friendId)
+            return nil
+        }
         let count = embeddings.count
         let dim = embeddings[0].count
         var centroid = [Float](repeating: 0, count: dim)
@@ -196,5 +250,23 @@ class RecognitionCoordinator: ObservableObject {
         logs.insert("Matched \(m.name) with score \(String(format: "%.3f", m.score))", at: 0)
 
         // In DisplayAccess we sent the name to the device display. FriendFinder may want to surface this locally.
+    }
+
+    private func rebuildRecognitionIndex() {
+        recognitionEngine.resetCentroids()
+        for friend in friendsStore.friends {
+            if let centroid = friend.centroidEmbedding {
+                recognitionEngine.updateCentroid(for: friend.id, centroid: centroid)
+            }
+        }
+    }
+
+    private func recomputeCentroids(for friendIDs: [String]) async {
+        var recomputedIDs = Set<String>()
+        for friendID in friendIDs {
+            guard recomputedIDs.insert(friendID).inserted else { continue }
+            _ = await computeCentroid(for: friendID)
+        }
+        rebuildRecognitionIndex()
     }
 }

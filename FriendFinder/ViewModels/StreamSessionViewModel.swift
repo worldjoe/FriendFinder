@@ -59,6 +59,7 @@ final class StreamSessionViewModel: ObservableObject {
   private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.example.FriendFinder", category: "StreamSessionViewModel")
   private var receivedFrameCount: Int = 0
   private var isStartingSession: Bool = false
+  private var isStoppingStreamExplicitly: Bool = false
   private var activeDeviceTask: Task<Void, Never>?
 
   private var stateListenerToken: AnyListenerToken?
@@ -242,6 +243,7 @@ final class StreamSessionViewModel: ObservableObject {
       queueDisplayRefresh()
       return
     }
+    isStoppingStreamExplicitly = true
     stream = nil
     clearListeners()
     streamingStatus = .waiting
@@ -250,6 +252,7 @@ final class StreamSessionViewModel: ObservableObject {
     isCapturingPhoto = false
     queueDisplayRefresh()
     await activeStream.stop()
+    isStoppingStreamExplicitly = false
     await recognitionCoordinator.stopRecognition()
     hasFoundFace = false
     isAttemptingMatchFace = false
@@ -401,8 +404,22 @@ final class StreamSessionViewModel: ObservableObject {
     logger.debug("Stream state changed:")
     switch state {
     case .stopped:
+      let stoppedByUserAction = isStoppingStreamExplicitly
+      stream = nil
+      clearListeners()
       currentVideoFrame = nil
-      streamingStatus = display == nil ? .stopped : .waiting
+      hasReceivedFirstFrame = false
+      isCapturingPhoto = false
+      if stoppedByUserAction {
+        streamingStatus = .waiting
+      } else {
+        streamingStatus = .stopped
+      }
+      Task { @MainActor [weak self] in
+        await self?.recognitionCoordinator.stopRecognition()
+      }
+      hasFoundFace = false
+      isAttemptingMatchFace = false
     case .waitingForDevice, .starting, .stopping, .paused:
       streamingStatus = .waiting
     case .streaming:
