@@ -30,7 +30,7 @@
 		8FFD60542E849D0D0035E446 /* RegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FFD60532E849D0D0035E446 /* RegistrationView.swift */; };
 		8FFD60602E84A2F70035E446 /* MainAppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FFD605F2E84A2F70035E446 /* MainAppView.swift */; };
 		8FFD60612E84A2F70035E446 /* DebugMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FFD605E2E84A2F70035E446 /* DebugMenuView.swift */; };
-		9F2F2F2F2F3E1A9300B08101 /* FriendsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1F1F1F2F3E1A9300B08001 /* FriendsStore.swift */; };
+		9F2F2F2F2F3E1A9300B08101 /* Model/FriendsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1F1F1F2F3E1A9300B08001 /* Model/FriendsStore.swift */; };
 		9F2F2F2F2F3E1A9300B08102 /* RecognitionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1F1F1F2F3E1A9300B08002 /* RecognitionEngine.swift */; };
 		9F2F2F2F2F3E1A9300B08103 /* FaceProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1F1F1F2F3E1A9300B08003 /* FaceProcessor.swift */; };
 		9F2F2F2F2F3E1A9300B08104 /* RecognitionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1F1F1F2F3E1A9300B08004 /* RecognitionCoordinator.swift */; };
@@ -101,7 +101,7 @@
 		8FFD60532E849D0D0035E446 /* RegistrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationView.swift; sourceTree = "<group>"; };
 		8FFD605E2E84A2F70035E446 /* DebugMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMenuView.swift; sourceTree = "<group>"; };
 		8FFD605F2E84A2F70035E446 /* MainAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainAppView.swift; sourceTree = "<group>"; };
-		9F1F1F1F2F3E1A9300B08001 /* FriendsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model/FriendsStore.swift; sourceTree = "<group>"; };
+		9F1F1F1F2F3E1A9300B08001 /* Model/FriendsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model/FriendsStore.swift; sourceTree = "<group>"; };
 		9F1F1F1F2F3E1A9300B08002 /* RecognitionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionEngine.swift; sourceTree = "<group>"; };
 		9F1F1F1F2F3E1A9300B08003 /* FaceProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceProcessor.swift; sourceTree = "<group>"; };
 		9F1F1F1F2F3E1A9300B08004 /* RecognitionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionCoordinator.swift; sourceTree = "<group>"; };
@@ -218,7 +218,7 @@
 		8FD96B7D2E6F0A9800F56AB1 /* FriendFinder */ = {
 			isa = PBXGroup;
 			children = (
-				9F1F1F1F2F3E1A9300B08001 /* FriendsStore.swift */,
+				9F1F1F1F2F3E1A9300B08001 /* Model/FriendsStore.swift */,
 				E66CC01A2F3E1A9300B07379 /* TestResources */,
 				8FD96B702E6F0A9800F56AB1 /* ViewModels */,
 				8FD96B762E6F0A9800F56AB1 /* Views */,
@@ -445,7 +445,7 @@
 				E66D30242E7DA71900470B48 /* MockDeviceKitButton.swift in Sources */,
 				8F8F00782E8ACB4600A4BDAF /* WearablesViewModel.swift in Sources */,
 				E6A188482EB918740097D0E1 /* StreamView.swift in Sources */,
-				9F2F2F2F2F3E1A9300B08101 /* FriendsStore.swift in Sources */,
+				9F2F2F2F2F3E1A9300B08101 /* Model/FriendsStore.swift in Sources */,
 				9F2F2F2F2F3E1A9300B08105 /* FriendsView.swift in Sources */,
 				9F2F2F2F2F3E1A9300B08106 /* AddFriendView.swift in Sources */,
 				9F2F2F2F2F3E1A9300B08107 /* FriendDetailView.swift in Sources */,
@@ -551,13 +551,14 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DKE62WNFK8;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.meta.wearables.external.FriendFinderUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.singleclick.meta.FriendFinderUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
@@ -577,13 +578,14 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DKE62WNFK8;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.meta.wearables.external.FriendFinderUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.singleclick.meta.FriendFinderUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -601,8 +603,10 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DKE62WNFK8;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -611,6 +615,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.meta.wearables.external.FriendFinderTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -630,8 +635,10 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DKE62WNFK8;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -640,6 +647,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.meta.wearables.external.FriendFinderTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -829,6 +837,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		7B1D4D8B3C9F4B6200A1B2C3 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7B1D4D8A3C9F4B6200A1B2C3 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
 		8FD96B942E6F0F7D00F56AB1 /* MWDATCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 95F7F3332DEF0D91006D1C1A /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
@@ -848,11 +861,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 95F7F3332DEF0D91006D1C1A /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
 			productName = MWDATDisplay;
-		};
-		7B1D4D8B3C9F4B6200A1B2C3 /* ZIPFoundation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7B1D4D8A3C9F4B6200A1B2C3 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
-			productName = ZIPFoundation;
 		};
 		E66CC01E2F3E1A9300B07380 /* MWDATMockDeviceTestClient */ = {
 			isa = XCSwiftPackageProductDependency;

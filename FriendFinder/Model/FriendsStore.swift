@@ -125,6 +125,7 @@ class FriendsStore: ObservableObject {
     func addFriend(name: String, nickname: String? = nil, note: String? = nil) -> Friend {
         let friend = Friend(name: name, nickname: nickname, note: note)
         friends.append(friend)
+        sortFriendsByName()
         save(triggerSync: true)
         return friend
     }
@@ -145,6 +146,7 @@ class FriendsStore: ObservableObject {
         friends[idx].nickname = nickname
         friends[idx].note = note
         friends[idx].updatedAt = Date()
+        sortFriendsByName()
         save(triggerSync: true)
     }
 
@@ -349,6 +351,7 @@ class FriendsStore: ObservableObject {
     // MARK: - Persistence
     private func save(triggerSync: Bool) {
         do {
+            sortFriendsByName()
             let data = try makeJSONData(for: friends)
             try data.write(to: storageURL, options: .atomic)
             try saveTombstones()
@@ -367,6 +370,7 @@ class FriendsStore: ObservableObject {
         do {
             let data = try Data(contentsOf: storageURL)
             self.friends = try decodeFriendsPayload(from: data)
+            sortFriendsByName()
         } catch {
             NSLog("[FriendsStore] Failed to load: \(error)")
             self.friends = []
@@ -535,6 +539,10 @@ class FriendsStore: ObservableObject {
             return incoming
         }
         return local
+    }
+
+    private func sortFriendsByName() {
+        friends.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
     private func importIfRemotePackageChanged(remotePackageURL: URL) async {

@@ -314,6 +314,16 @@ final class FriendsStoreTests: XCTestCase {
     XCTAssertEqual(updated?.note, "Note")
   }
 
+  func testUpdateFriendDetailsResortsFriendsByName() {
+    let store = FriendsStore(filename: filename)
+    let zed = store.addFriend(name: "Zed")
+    _ = store.addFriend(name: "Amy")
+
+    store.updateFriendDetails(id: zed.id, name: "Aaron", nickname: nil, note: nil)
+
+    XCTAssertEqual(store.friends.map(\.name), ["Aaron", "Amy"])
+  }
+
   func testDeleteFriendPersists() {
     let store = FriendsStore(filename: filename)
     let friend = store.addFriend(name: "Alice")
