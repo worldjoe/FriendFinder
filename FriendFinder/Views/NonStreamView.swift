@@ -22,7 +22,7 @@ private let updateRequiredTitle = "Update required"
 private let waitingForActiveDeviceText = "Waiting for an active device"
 
 struct NonStreamView: View {
-  var viewModel: StreamSessionViewModel
+  @ObservedObject var viewModel: StreamSessionViewModel
   @Bindable var wearablesVM: WearablesViewModel
   @State private var sheetHeight: CGFloat = 300
   @State private var showSettingsMenu: Bool = false
