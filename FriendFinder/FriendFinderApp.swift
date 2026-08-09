@@ -89,9 +89,11 @@ struct FriendFinderApp: App {
         DebugMenuView(debugMenuViewModel: debugMenuViewModel)
       }
         #endif
-
-      // Registration view handles the flow for connecting to the glasses via Meta AI
-      RegistrationView(viewModel: wearablesViewModel)
+      .background {
+        // RegistrationView only listens for the Meta AI callback URL; keep it
+        // in the scene tree without presenting another visible root view.
+        RegistrationView(viewModel: wearablesViewModel)
+      }
     }
   }
 }

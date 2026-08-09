@@ -26,7 +26,7 @@ extension MockDeviceCardView {
   @Observable
   @MainActor
   final class ViewModel {
-    let device: MockDevice
+    let device: MockGlasses
     var hasCameraFeed: Bool = false
     var hasCapturedImage: Bool = false
     var cameraSource: CameraFacing?
@@ -35,7 +35,7 @@ extension MockDeviceCardView {
     var isUnfolded: Bool = false
     var showCameraPermissionAlert: Bool = false
 
-    init(device: MockDevice, hasCameraFeed: Bool = false, hasCapturedImage: Bool = false) {
+    init(device: MockGlasses, hasCameraFeed: Bool = false, hasCapturedImage: Bool = false) {
       self.device = device
       self.hasCameraFeed = hasCameraFeed
       self.hasCapturedImage = hasCapturedImage
@@ -44,12 +44,7 @@ extension MockDeviceCardView {
     var id: String { device.deviceIdentifier }
 
     // Display name for the mock device in the UI
-    var deviceName: String {
-      if device is MockRaybanMeta {
-        return "RayBan Meta Glasses"
-      }
-      return "Device"
-    }
+    var deviceName: String { "Mock glasses" }
 
     func powerOn() {
       device.powerOn()
@@ -75,45 +70,40 @@ extension MockDeviceCardView {
     }
 
     func unfold() {
-      if let rayBanDevice = device as? MockDisplaylessGlasses {
-        rayBanDevice.unfold()
-        isUnfolded = true
-      }
+      device.unfold()
+      isUnfolded = true
     }
 
     func fold() {
-      if let rayBanDevice = device as? MockDisplaylessGlasses {
-        rayBanDevice.fold()
-        isUnfolded = false
-        isDonned = false
-      }
+      device.fold()
+      isUnfolded = false
+      isDonned = false
     }
 
     func captouchTap() {
-      (device as? MockDisplaylessGlasses)?.services.captouch.tap()
+      device.services.captouch.tap()
     }
 
     func captouchTapAndHold() {
-      (device as? MockDisplaylessGlasses)?.services.captouch.tapAndHold()
+      device.services.captouch.tapAndHold()
     }
 
     func setCameraFeed(_ facing: CameraFacing) {
-      if let cameraKit = (device as? MockDisplaylessGlasses)?.services.camera {
-        Task {
-          let status = AVCaptureDevice.authorizationStatus(for: .video)
-          if status == .denied || status == .restricted {
-            self.showCameraPermissionAlert = true
-            return
-          }
-          let granted = await AVCaptureDevice.requestAccess(for: .video)
-          guard granted else {
-            self.showCameraPermissionAlert = true
-            return
-          }
-          await cameraKit.setCameraFeed(cameraFacing: facing)
-          self.cameraSource = facing
-          self.hasCameraFeed = false
+      let cameraKit = device.services.camera
+      Task {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        if status == .denied || status == .restricted {
+          self.showCameraPermissionAlert = true
+          return
         }
+        let granted = await AVCaptureDevice.requestAccess(for: .video)
+        guard granted else {
+          self.showCameraPermissionAlert = true
+          return
+        }
+        cameraKit.setCameraFeed(cameraFacing: facing)
+        self.cameraSource = facing
+        self.hasCameraFeed = false
       }
     }
 
@@ -125,19 +115,17 @@ extension MockDeviceCardView {
 
     // Load mock video content
     func selectVideo(from url: URL) {
-      if let cameraKit = (device as? MockDisplaylessGlasses)?.services.camera {
-        cameraKit.setCameraFeed(fileURL: url)
-        hasCameraFeed = true
-        cameraSource = nil
-      }
+      let cameraKit = device.services.camera
+      cameraKit.setCameraFeed(fileURL: url)
+      hasCameraFeed = true
+      cameraSource = nil
     }
 
     // Load mock image content
     func selectImage(from url: URL) {
-      if let cameraKit = (device as? MockDisplaylessGlasses)?.services.camera {
-        cameraKit.setCapturedImage(fileURL: url)
-        hasCapturedImage = true
-      }
+      let cameraKit = device.services.camera
+      cameraKit.setCapturedImage(fileURL: url)
+      hasCapturedImage = true
     }
   }
 }

@@ -27,11 +27,15 @@ extension MockDeviceKitView {
     private let mockDeviceKit: MockDeviceKitInterface
     var cardViewModels: [MockDeviceCardView.ViewModel] = []
     var isEnabled: Bool
+    var isShowingError: Bool = false
+    var errorMessage: String = ""
 
     init(mockDeviceKit: MockDeviceKitInterface) {
       self.mockDeviceKit = mockDeviceKit
       self.isEnabled = mockDeviceKit.isEnabled
-      self.cardViewModels = mockDeviceKit.pairedDevices.map { MockDeviceCardView.ViewModel(device: $0) }
+      self.cardViewModels = mockDeviceKit.pairedDevices.compactMap { $0 as? MockGlasses }.map {
+        MockDeviceCardView.ViewModel(device: $0)
+      }
     }
 
     func enable() {
@@ -45,10 +49,14 @@ extension MockDeviceKitView {
       isEnabled = false
     }
 
-    // Add a new mock Ray-Ban Meta device
-    func pairRaybanMeta() {
-      let mockDevice = mockDeviceKit.pairRaybanMeta()
-      cardViewModels.append(MockDeviceCardView.ViewModel(device: mockDevice))
+    func pairGlasses() {
+      do {
+        let mockDevice = try mockDeviceKit.pairGlasses(model: .rayBanMeta)
+        cardViewModels.append(MockDeviceCardView.ViewModel(device: mockDevice))
+      } catch {
+        errorMessage = error.localizedDescription
+        isShowingError = true
+      }
     }
 
     func unpairDevice(_ device: MockDevice) {
@@ -56,6 +64,10 @@ extension MockDeviceKitView {
         cardViewModels.remove(at: idx)
         mockDeviceKit.unpairDevice(device)
       }
+    }
+
+    func dismissError() {
+      isShowingError = false
     }
   }
 }

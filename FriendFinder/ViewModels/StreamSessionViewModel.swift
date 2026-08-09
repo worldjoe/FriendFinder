@@ -10,6 +10,7 @@ import MWDATCamera
 import MWDATCore
 import MWDATDisplay
 import SwiftUI
+import UIKit
 import os
 import Combine
 import Foundation
@@ -55,12 +56,14 @@ final class StreamSessionViewModel: ObservableObject {
   private let sessionManager: DeviceSessionManager
   private let wearables: WearablesInterface
   private var deviceSession: DeviceSession?
+  private var camera: MWDATCamera.Camera?
   private var stream: MWDATCamera.Stream?
   private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.example.FriendFinder", category: "StreamSessionViewModel")
   private var receivedFrameCount: Int = 0
   private var isStartingSession: Bool = false
   private var isStoppingStreamExplicitly: Bool = false
   private var activeDeviceTask: Task<Void, Never>?
+  private var appLifecycleTask: Task<Void, Never>?
 
   private var stateListenerToken: AnyListenerToken?
   private var videoFrameListenerToken: AnyListenerToken?
@@ -101,6 +104,14 @@ final class StreamSessionViewModel: ObservableObject {
       }
     }
 
+    appLifecycleTask = Task { @MainActor [weak self] in
+      guard let self else { return }
+      for await _ in NotificationCenter.default.notifications(named: UIApplication.didEnterBackgroundNotification) {
+        guard self.deviceSession != nil || self.stream != nil else { continue }
+        self.endSession()
+      }
+    }
+
     // Observe recognition coordinator
     recognitionMatchCancellable = recognitionCoordinator.$lastMatch.sink { [weak self] m in
       Task { @MainActor in
@@ -127,6 +138,7 @@ final class StreamSessionViewModel: ObservableObject {
 
   deinit {
     activeDeviceTask?.cancel()
+    appLifecycleTask?.cancel()
     recognitionMatchCancellable?.cancel()
     recognitionLogsCancellable?.cancel()
     recognitionFaceStateCancellable?.cancel()
@@ -182,6 +194,8 @@ final class StreamSessionViewModel: ObservableObject {
 
   /// Stops both the stream and the underlying device session. Call in test tearDown.
   func endSession() {
+    camera?.stop()
+    camera = nil
     stream = nil
     clearListeners()
     streamingStatus = .stopped
@@ -234,7 +248,7 @@ final class StreamSessionViewModel: ObservableObject {
   }
 
   private func stopStreamingOnly() async {
-    guard let activeStream = stream else {
+    guard let activeCamera = camera else {
       currentVideoFrame = nil
       hasReceivedFirstFrame = false
       await recognitionCoordinator.stopRecognition()
@@ -244,6 +258,7 @@ final class StreamSessionViewModel: ObservableObject {
       return
     }
     isStoppingStreamExplicitly = true
+    camera = nil
     stream = nil
     clearListeners()
     streamingStatus = .waiting
@@ -251,7 +266,7 @@ final class StreamSessionViewModel: ObservableObject {
     hasReceivedFirstFrame = false
     isCapturingPhoto = false
     queueDisplayRefresh()
-    await activeStream.stop()
+    activeCamera.stop()
     isStoppingStreamExplicitly = false
     await recognitionCoordinator.stopRecognition()
     hasFoundFace = false
@@ -304,8 +319,8 @@ final class StreamSessionViewModel: ObservableObject {
 
     let config = StreamConfiguration(
       videoCodec: VideoCodec.raw,
-      resolution: StreamingResolution.low,
-      frameRate: 24
+      resolution: StreamingResolution.high,
+      frameRate: 2
     )
 
     // Try a few times to add/start the stream in case the accessory is still
@@ -316,16 +331,18 @@ final class StreamSessionViewModel: ObservableObject {
     for attempt in 1...maxAttempts {
       do {
         logger.debug("Stream start attempt \(attempt)/\(maxAttempts)")
-        if let newStream = try session.addStream(config: config) {
+        if let newCamera = try session.addCamera(config: config) {
+          camera = newCamera
+          let newStream = newCamera.stream
           stream = newStream
           streamingStatus = .waiting
           logger.debug("Stream created, starting listeners and requesting start")
           setupListeners(for: newStream)
-          await newStream.start()
+          newStream.start()
           started = true
           break
         } else {
-          logger.debug("deviceSession.addStream returned nil on attempt \(attempt)")
+          logger.debug("deviceSession.addCamera returned nil on attempt \(attempt)")
         }
       } catch {
         logger.error("Stream start attempt \(attempt) failed: \(error.localizedDescription)")
@@ -405,6 +422,7 @@ final class StreamSessionViewModel: ObservableObject {
     switch state {
     case .stopped:
       let stoppedByUserAction = isStoppingStreamExplicitly
+      camera = nil
       stream = nil
       clearListeners()
       currentVideoFrame = nil

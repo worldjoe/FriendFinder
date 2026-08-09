@@ -55,7 +55,7 @@ struct MockDeviceKitView: View {
                 }
 
                 MockDeviceKitButton("Pair RayBan Meta", disabled: viewModel.cardViewModels.count >= 3) {
-                  viewModel.pairRaybanMeta()
+                  viewModel.pairGlasses()
                 }
               } else {
                 MockDeviceKitButton("Enable MockDeviceKit") {
